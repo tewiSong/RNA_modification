@@ -1,0 +1,6 @@
+*.*.err
+*.*.out
+dcgm/
+Data/
+Results/
+RNA_modification_rep/
