@@ -1,7 +1,7 @@
 #!/bin/bash --login
 #SBATCH -N 1
 #SBATCH --partition=batch
-#SBATCH -J multirm-original-lomo
+#SBATCH -J multirm-paper-chemical-v1
 #SBATCH -o %x.%j.out
 #SBATCH -e %x.%j.err
 #SBATCH --time=2:00:00
@@ -12,11 +12,13 @@
 set -euo pipefail
 
 if [[ "$#" -ne 1 ]]; then
-  echo "Usage: sbatch slum_scripts/submit_paper_original_lomo.sh <Am|Cm|Gm|Um|m1A|m5C|m5U|m6A|m6Am|m7G|Psi|I>"
+  echo "Usage: sbatch slum_scripts/submit_paper_chemical_v1.sh <bilinear|lowrank|hypernetwork>"
   exit 2
 fi
 
-HELDOUT_MOD="$1"
+SCORER_TYPE="$1"
+
+echo "scorer_type=${SCORER_TYPE}"
 
 cd /ibex/user/songt/MultiRM
 
@@ -25,19 +27,19 @@ conda activate /ibex/user/songt/conda_envs/rna
 
 python Scripts/check_cuda_v0.py
 
-python Scripts/paper_multirm.py train_original_lomo \
+python Scripts/paper_multirm.py train_chemical_v1 \
   --data_path Data/MultiRM_data.h5 \
   --embedding_path Embeddings/embeddings_12RM.pkl \
-  --save_dir Results/paper_aligned/original_lomo \
+  --modifications_path Data/modifications.csv \
+  --save_dir "Results/paper_aligned/chemical_v1_${SCORER_TYPE}" \
   --cache_dir Results/paper_aligned/cache \
-  --heldout_mod "${HELDOUT_MOD}" \
+  --scorer_type "${SCORER_TYPE}" \
+  --num_heads 8 \
   --length 51 \
   --epochs 50 \
   --batch_size 128 \
   --lr 0.0001 \
   --lr_decay 0.8 \
   --lr_patience 5 \
-  --loss_strategy weighted_bce \
-  --early_stop_patience 15 \
-  --weight_decay 1e-4 \
+  --loss_strategy paper_ohem_uw \
   --device cuda

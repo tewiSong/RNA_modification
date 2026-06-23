@@ -1,7 +1,7 @@
 #!/bin/bash --login
 #SBATCH -N 1
 #SBATCH --partition=batch
-#SBATCH -J multirm-original-lomo
+#SBATCH -J multirm-v2
 #SBATCH -o %x.%j.out
 #SBATCH -e %x.%j.err
 #SBATCH --time=2:00:00
@@ -11,12 +11,14 @@
 
 set -euo pipefail
 
-if [[ "$#" -ne 1 ]]; then
-  echo "Usage: sbatch slum_scripts/submit_paper_original_lomo.sh <Am|Cm|Gm|Um|m1A|m5C|m5U|m6A|m6Am|m7G|Psi|I>"
+if [[ "$#" -lt 1 ]]; then
+  echo "Usage: sbatch slum_scripts/submit_paper_chemical_v2.sh <tau> [encoder=linear] [fp_kind=morgan_r2]"
   exit 2
 fi
 
-HELDOUT_MOD="$1"
+TAU="$1"
+ENC="${2:-linear}"
+FP="${3:-morgan_r2}"
 
 cd /ibex/user/songt/MultiRM
 
@@ -25,12 +27,15 @@ conda activate /ibex/user/songt/conda_envs/rna
 
 python Scripts/check_cuda_v0.py
 
-python Scripts/paper_multirm.py train_original_lomo \
+python Scripts/paper_multirm.py train_chemical_v2 \
   --data_path Data/MultiRM_data.h5 \
   --embedding_path Embeddings/embeddings_12RM.pkl \
-  --save_dir Results/paper_aligned/original_lomo \
+  --modifications_path Data/modifications.csv \
+  --save_dir "Results/paper_aligned/chemical_v2_tau${TAU}_${ENC}_${FP}" \
   --cache_dir Results/paper_aligned/cache \
-  --heldout_mod "${HELDOUT_MOD}" \
+  --tau "${TAU}" \
+  --chemical_encoder_type "${ENC}" \
+  --fp_kind "${FP}" \
   --length 51 \
   --epochs 50 \
   --batch_size 128 \

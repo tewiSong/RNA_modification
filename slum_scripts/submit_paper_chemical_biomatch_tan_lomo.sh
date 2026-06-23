@@ -1,7 +1,7 @@
 #!/bin/bash --login
 #SBATCH -N 1
 #SBATCH --partition=batch
-#SBATCH -J multirm-original-lomo
+#SBATCH -J multirm-biomatch-tan-lomo
 #SBATCH -o %x.%j.out
 #SBATCH -e %x.%j.err
 #SBATCH --time=2:00:00
@@ -11,25 +11,39 @@
 
 set -euo pipefail
 
-if [[ "$#" -ne 1 ]]; then
-  echo "Usage: sbatch slum_scripts/submit_paper_original_lomo.sh <Am|Cm|Gm|Um|m1A|m5C|m5U|m6A|m6Am|m7G|Psi|I>"
+if [[ "$#" -lt 2 ]]; then
+  echo "Usage: sbatch slum_scripts/submit_paper_chemical_biomatch_tan_lomo.sh <tau> <heldout_mod> [encoder=linear] [seed=1] [alpha=1.0]"
   exit 2
 fi
 
-HELDOUT_MOD="$1"
+TAU="$1"
+HELDOUT_MOD="$2"
+ENC="${3:-linear}"
+SEED="${4:-1}"
+ALPHA="${5:-1.0}"
+SAVE_SUFFIX=""
+if [[ "${SEED}" != "1" ]]; then
+  SAVE_SUFFIX="_seed${SEED}"
+fi
+SAVE_SUFFIX="${SAVE_SUFFIX}_a${ALPHA}"
 
 cd /ibex/user/songt/MultiRM
-
 source /home/songt/anaconda3/etc/profile.d/conda.sh
 conda activate /ibex/user/songt/conda_envs/rna
-
 python Scripts/check_cuda_v0.py
 
-python Scripts/paper_multirm.py train_original_lomo \
+python Scripts/paper_multirm.py train_chemical_biomatch_tan_lomo \
   --data_path Data/MultiRM_data.h5 \
   --embedding_path Embeddings/embeddings_12RM.pkl \
-  --save_dir Results/paper_aligned/original_lomo \
+  --modifications_path Data/modifications.csv \
+  --save_dir "Results/paper_aligned/chemical_biomatch_tan_tau${TAU}_${ENC}${SAVE_SUFFIX}_lomo" \
   --cache_dir Results/paper_aligned/cache \
+  --tau "${TAU}" \
+  --chemical_encoder_type "${ENC}" \
+  --fp_kind morgan_r2 \
+  --bio_weight 0.0 \
+  --alpha "${ALPHA}" \
+  --seed "${SEED}" \
   --heldout_mod "${HELDOUT_MOD}" \
   --length 51 \
   --epochs 50 \

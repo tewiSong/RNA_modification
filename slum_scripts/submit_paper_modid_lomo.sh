@@ -1,7 +1,7 @@
 #!/bin/bash --login
 #SBATCH -N 1
 #SBATCH --partition=batch
-#SBATCH -J multirm-original-lomo
+#SBATCH -J multirm-modid-lomo
 #SBATCH -o %x.%j.out
 #SBATCH -e %x.%j.err
 #SBATCH --time=2:00:00
@@ -12,7 +12,7 @@
 set -euo pipefail
 
 if [[ "$#" -ne 1 ]]; then
-  echo "Usage: sbatch slum_scripts/submit_paper_original_lomo.sh <Am|Cm|Gm|Um|m1A|m5C|m5U|m6A|m6Am|m7G|Psi|I>"
+  echo "Usage: sbatch slum_scripts/submit_paper_modid_lomo.sh <Am|Cm|Gm|Um|m1A|m5C|m5U|m6A|m6Am|m7G|Psi|I>"
   exit 2
 fi
 
@@ -25,10 +25,10 @@ conda activate /ibex/user/songt/conda_envs/rna
 
 python Scripts/check_cuda_v0.py
 
-python Scripts/paper_multirm.py train_original_lomo \
+python Scripts/paper_multirm.py train_modid_lomo \
   --data_path Data/MultiRM_data.h5 \
   --embedding_path Embeddings/embeddings_12RM.pkl \
-  --save_dir Results/paper_aligned/original_lomo \
+  --save_dir Results/paper_aligned/modid_lomo \
   --cache_dir Results/paper_aligned/cache \
   --heldout_mod "${HELDOUT_MOD}" \
   --length 51 \
